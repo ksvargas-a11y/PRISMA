@@ -1,0 +1,100 @@
+/* Custom styles complementing Tailwind and Clarity Spectrum Design System */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --surface: #f8f9ff;
+  --surface-low: #eff4ff;
+  --surface-lowest: #ffffff;
+  --primary: #3525cd;
+  --primary-container: #4f46e5;
+  --secondary: #712ae2;
+  --priority-high: #ef4444;
+  --priority-medium: #f59e0b;
+  --priority-low: #10b981;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--surface);
+  color: #0b1c30;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-pop-in {
+  animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Drag and Drop Visuals */
+.kanban-card.dragging {
+  opacity: 0.45;
+  transform: rotate(2deg) scale(0.98);
+  box-shadow: 0 12px 24px -4px rgba(79, 70, 229, 0.2);
+}
+
+.kanban-column.drag-over {
+  background-color: #e5eeff !important;
+  border-color: #4f46e5 !important;
+  outline: 2px dashed #4f46e5;
+  outline-offset: -2px;
+}
+
+/* Task Strike-through */
+.task-title.completed {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+
+/* Micro-step check */
+.micro-checkbox:checked + span {
+  text-decoration: line-through;
+  color: #94a3b8;
+}
+
+/* Glassmorphism effects */
+.glass-header {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background-color: rgba(248, 249, 255, 0.88);
+}
+
+/* Flower animation */
+@keyframes softRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin-slow {
+  animation: softRotate 40s linear infinite;
+}

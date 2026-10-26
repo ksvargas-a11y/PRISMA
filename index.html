@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prisma — Academic Focus & Task Manager</title>
+  
+  <!-- Tipografía Plus Jakarta Sans y Google Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            surface: "#f8f9ff",
+            "surface-dim": "#cbdbf5",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#eff4ff",
+            "surface-container": "#e5eeff",
+            "surface-container-high": "#dce9ff",
+            "on-surface": "#0b1c30",
+            "on-surface-variant": "#464555",
+            primary: "#3525cd",
+            "primary-container": "#4f46e5",
+            "on-primary": "#ffffff",
+            "primary-fixed": "#e2dfff",
+            secondary: "#712ae2",
+            "secondary-container": "#8a4cfc",
+            "secondary-fixed": "#eaddff",
+            tertiary: "#005338",
+            "tertiary-fixed-dim": "#4edea3",
+            error: "#ba1a1a",
+            "error-container": "#ffdad6"
+          },
+          fontFamily: {
+            sans: ["'Plus Jakarta Sans'", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Estilos personalizados -->
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="bg-surface font-sans text-on-surface min-h-screen antialiased flex flex-col selection:bg-primary-fixed selection:text-primary">
+
+  <!-- Canvas para confetti al completar tareas -->
+  <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-50"></canvas>
+
+  <!-- SIDEBAR LATERAL (Desktop & Tablet) -->
+  <aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-lowest z-40 flex flex-col justify-between border-r border-slate-200/80 shadow-[0_1px_8px_rgba(0,0,0,0.03)] hidden md:flex">
+    <div class="flex flex-col">
+      <!-- Logo y Brand -->
+      <div class="h-16 px-6 flex items-center gap-3 border-b border-slate-100">
+        <div class="w-9 h-9 rounded-xl bg-primary-container flex items-center justify-center text-white shadow-sm">
+          <span class="material-symbols-outlined text-[20px]">filter_vintage</span>
+        </div>
+        <div class="flex flex-col">
+          <span class="font-extrabold text-lg text-primary tracking-tight leading-none">Prisma</span>
+          <span class="text-[11px] font-semibold text-on-surface-variant tracking-wider uppercase">Academic Focus</span>
+        </div>
+      </div>
+
+      <!-- Botón de Acción Principal: + Nueva Tarea -->
+      <div class="p-4">
+        <button onclick="openNewTaskModal()" class="w-full py-2.5 px-4 bg-primary text-white rounded-xl font-bold text-xs shadow-sm hover:bg-primary-container transition-all flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-[18px]">add</span>
+          <span>Nueva Tarea</span>
+        </button>
+      </div>
+
+      <!-- Navegación de Vistas -->
+      <nav class="px-3 space-y-1">
+        <a href="#mi-dia" data-nav-target="mi-dia" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-xs bg-primary-container text-white shadow-sm transition-all">
+          <span class="material-symbols-outlined text-[20px]">wb_sunny</span>
+          <span>Mi Día & Enfoque</span>
+        </a>
+        <a href="#tablero" data-nav-target="tablero" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-xs text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all">
+          <span class="material-symbols-outlined text-[20px]">view_kanban</span>
+          <span>Tablero de Estados</span>
+        </a>
+        <a href="#calendario" data-nav-target="calendario" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-xs text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all">
+          <span class="material-symbols-outlined text-[20px]">calendar_month</span>
+          <span>Calendario & Entregas</span>
+        </a>
+        <a href="#anotar-tarea" data-nav-target="anotar-tarea" class="flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-xs text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all">
+          <span class="material-symbols-outlined text-[20px]">edit_note</span>
+          <span>Anotar & Desglosar</span>
+        </a>
+      </nav>
+
+      <!-- Filtro rápido por Asignaturas -->
+      <div class="px-4 mt-6">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Asignaturas</span>
+          <button onclick="setSubjectFilter('all')" class="text-[10px] text-primary hover:underline font-bold">Ver todas</button>
+        </div>
+        <div class="space-y-1">
+          <button onclick="setSubjectFilter('Cálculo Multivariable')" data-subject-filter="Cálculo Multivariable" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 flex items-center justify-between transition-all">
+            <span class="flex items-center gap-2 truncate">
+              <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+              <span class="truncate">Cálculo Multivariable</span>
+            </span>
+          </button>
+          <button onclick="setSubjectFilter('Algoritmos y Datos')" data-subject-filter="Algoritmos y Datos" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 flex items-center justify-between transition-all">
+            <span class="flex items-center gap-2 truncate">
+              <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+              <span class="truncate">Algoritmos y Datos</span>
+            </span>
+          </button>
+          <button onclick="setSubjectFilter('Física Mecánica')" data-subject-filter="Física Mecánica" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 flex items-center justify-between transition-all">
+            <span class="flex items-center gap-2 truncate">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+              <span class="truncate">Física Mecánica</span>
+            </span>
+          </button>
+          <button onclick="setSubjectFilter('Arquitectura Software')" data-subject-filter="Arquitectura Software" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 flex items-center justify-between transition-all">
+            <span class="flex items-center gap-2 truncate">
+              <span class="w-2 h-2 rounded-full bg-teal-500"></span>
+              <span class="truncate">Arquitectura Software</span>
+            </span>
+          </button>
+          <button onclick="setSubjectFilter('Ética y Sociedad')" data-subject-filter="Ética y Sociedad" class="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 flex items-center justify-between transition-all">
+            <span class="flex items-center gap-2 truncate">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              <span class="truncate">Ética y Sociedad</span>
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Perfil del Estudiante (Footer Sidebar) -->
+    <div class="p-4 border-t border-slate-100 bg-surface-container-low/40">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm ring-2 ring-white shrink-0">
+          KV
+        </div>
+        <div class="flex flex-col min-w-0">
+          <span class="text-xs font-bold text-on-surface truncate">Karen Sofia Vargas</span>
+          <span class="text-[10px] text-on-surface-variant truncate">Ingeniería • Racha 5d 🔥</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CONTENEDOR PRINCIPAL (Margen izquierdo para el sidebar) -->
+  <div class="md:pl-64 flex flex-col flex-1">
+    
+    <!-- HEADER SUPERIOR -->
+    <header class="sticky top-0 h-16 bg-surface/90 glass-header z-30 border-b border-slate-200/60 px-4 md:px-8 flex items-center justify-between gap-4">
+      <!-- Buscador en tiempo real -->
+      <div class="flex items-center flex-1 max-w-md">
+        <div class="relative w-full">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+          <input type="text" oninput="handleSearchInput(event)" placeholder="Buscar tareas, materias o apuntes..." class="w-full h-10 pl-10 pr-4 bg-surface-container-lowest text-on-surface rounded-xl text-xs placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary shadow-sm border border-slate-200" />
+        </div>
+      </div>
+
+      <!-- Acciones de Cabecera: Pomodoro Rápido, Notificaciones, Botón móvil -->
+      <div class="flex items-center gap-2">
+        <!-- Widget Pomodoro Rápido en Header -->
+        <button onclick="navigateTo('mi-dia')" class="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-lowest hover:bg-surface-container rounded-xl border border-slate-200 text-xs font-bold text-primary shadow-sm transition-all" title="Ver Temporizador Pomodoro">
+          <span class="material-symbols-outlined text-[18px] text-amber-500 animate-pulse">timer</span>
+          <span id="quickPomodoroDisplay">25:00</span>
+        </button>
+
+        <button onclick="resetAllData()" class="p-2 rounded-xl bg-surface-container-lowest hover:bg-slate-100 text-slate-500 transition-colors shadow-sm border border-slate-200" title="Restablecer datos de ejemplo">
+          <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+        </button>
+
+        <button onclick="openNewTaskModal()" class="md:hidden p-2 rounded-xl bg-primary text-white shadow-sm flex items-center justify-center">
+          <span class="material-symbols-outlined text-[20px]">add</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- NAVEGACIÓN MÓVIL (Visible solo en pantallas pequeñas) -->
+    <div class="md:hidden flex items-center justify-around bg-surface-container-lowest border-b border-slate-200 p-2">
+      <button onclick="navigateTo('mi-dia')" class="p-2 text-xs font-bold text-primary flex flex-col items-center">
+        <span class="material-symbols-outlined text-[20px]">wb_sunny</span>
+        <span>Mi Día</span>
+      </button>
+      <button onclick="navigateTo('tablero')" class="p-2 text-xs font-medium text-slate-600 flex flex-col items-center">
+        <span class="material-symbols-outlined text-[20px]">view_kanban</span>
+        <span>Tablero</span>
+      </button>
+      <button onclick="navigateTo('calendario')" class="p-2 text-xs font-medium text-slate-600 flex flex-col items-center">
+        <span class="material-symbols-outlined text-[20px]">calendar_month</span>
+        <span>Calendario</span>
+      </button>
+      <button onclick="navigateTo('anotar-tarea')" class="p-2 text-xs font-medium text-slate-600 flex flex-col items-center">
+        <span class="material-symbols-outlined text-[20px]">edit_note</span>
+        <span>Anotar</span>
+      </button>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL: VISTAS INTERCAMBIABLES -->
+    <main class="p-4 md:p-8 max-w-7xl w-full mx-auto flex flex-col gap-6 flex-1">
+
+      <!-- ============================================== -->
+      <!-- VISTA 1: MI DÍA & ENFOQUE (#mi-dia)            -->
+      <!-- ============================================== -->
+      <section id="view-mi-dia" class="space-y-6">
+        
+        <!-- Saludo y Métricas Resumen -->
+        <div class="bg-surface-container-lowest p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary to-secondary text-white flex items-center justify-center font-extrabold text-xl shadow-md">
+              KV
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h1 class="text-2xl font-extrabold text-on-surface tracking-tight">¡Hola, Karen! 👋</h1>
+                <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">Modo Enfoque</span>
+              </div>
+              <p class="text-xs text-on-surface-variant mt-0.5">Semana académica activa • Tienes entregas con prioridad alta listas para desglosar.</p>
+            </div>
+          </div>
+
+          <!-- Métricas del Día -->
+          <div class="flex items-center gap-3">
+            <div class="bg-surface-container-low px-4 py-2.5 rounded-xl border border-slate-100 text-center">
+              <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Efectividad</span>
+              <div id="metricEffectiveness" class="text-lg font-extrabold text-primary">80%</div>
+            </div>
+            <div class="bg-surface-container-low px-4 py-2.5 rounded-xl border border-slate-100 text-center">
+              <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Pendientes</span>
+              <div id="metricPending" class="text-lg font-extrabold text-amber-600">3</div>
+            </div>
+            <div class="bg-surface-container-low px-4 py-2.5 rounded-xl border border-slate-100 text-center">
+              <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Terminadas</span>
+              <div id="metricCompleted" class="text-lg font-extrabold text-emerald-600">2</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Banner Hero Anti-Procrastinación con Pomodoro Integrado -->
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary-fixed via-secondary-fixed to-surface-container p-6 md:p-8 shadow-sm border border-indigo-100">
+          <div class="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            
+            <!-- Izquierda: Propuesta Anti-inercia -->
+            <div class="lg:col-span-7 space-y-3">
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary text-white text-xs font-bold uppercase tracking-wider">
+                <span class="material-symbols-outlined text-[16px]">psychology</span>
+                <span>Técnica Anti-Procrastinación</span>
+              </div>
+              <h2 class="text-xl md:text-2xl font-extrabold text-on-surface tracking-tight">
+                No pienses en la entrega completa: solo haz el siguiente micro-paso de 15 minutos.
+              </h2>
+              
+              <!-- Tarjeta interactiva del primer micro-paso -->
+              <div id="antiProcrastinationStep" class="bg-surface-container-lowest/90 backdrop-blur-md p-4 rounded-xl border border-indigo-200/60 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <!-- Se llena dinámicamente con JS -->
+              </div>
+            </div>
+
+            <!-- Derecha: Temporizador Pomodoro de Enfoque -->
+            <div class="lg:col-span-5 bg-surface-container-lowest/95 backdrop-blur-md p-6 rounded-2xl shadow-md border border-indigo-100 flex flex-col items-center text-center">
+              <div class="flex items-center gap-1.5 mb-3 bg-surface-container-low p-1 rounded-xl">
+                <button onclick="setPomodoroMode('focus')" data-pomodoro-tab="focus" class="px-3 py-1 text-xs font-semibold rounded-lg bg-primary text-white shadow-sm">25m Foco</button>
+                <button onclick="setPomodoroMode('shortBreak')" data-pomodoro-tab="shortBreak" class="px-3 py-1 text-xs font-medium rounded-lg text-slate-600 hover:bg-surface-container">5m Descanso</button>
+                <button onclick="setPomodoroMode('longBreak')" data-pomodoro-tab="longBreak" class="px-3 py-1 text-xs font-medium rounded-lg text-slate-600 hover:bg-surface-container">15m Largo</button>
+              </div>
+
+              <div id="pomodoroModeLabel" class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">Enfoque Profundo</div>
+              <div id="pomodoroDisplay" class="text-4xl md:text-5xl font-extrabold text-on-surface tracking-tight font-mono my-1">25:00</div>
+              
+              <div class="flex items-center gap-2 mt-4">
+                <button id="pomodoroStartBtn" onclick="togglePomodoro()" class="px-5 py-2 bg-primary text-white rounded-xl text-xs font-bold shadow-sm hover:bg-primary-container transition-all flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[18px]">play_arrow</span>
+                  <span>Iniciar Foco</span>
+                </button>
+                <button id="pomodoroResetBtn" onclick="resetPomodoro()" class="p-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition-all" title="Reiniciar">
+                  <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Barra de Filtros de Prioridad y Cabecera de Tareas del Día -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+          <div class="flex items-center gap-2">
+            <h3 class="text-lg font-extrabold text-on-surface">Mis Tareas de Hoy & Próximas</h3>
+            <span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-bold">
+              <span class="critical-count-badge">2</span> Críticas
+            </span>
+          </div>
+
+          <!-- Filtros de Prioridad -->
+          <div class="flex items-center gap-1.5 bg-surface-container-lowest p-1 rounded-xl border border-slate-200 shadow-sm">
+            <button onclick="setPriorityFilter('all')" data-prio-filter="all" class="px-3 py-1.5 rounded-full text-xs font-bold bg-primary text-white shadow-sm">Todas</button>
+            <button onclick="setPriorityFilter('high')" data-prio-filter="high" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high">🔴 Alta</button>
+            <button onclick="setPriorityFilter('medium')" data-prio-filter="medium" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high">🟡 Media</button>
+            <button onclick="setPriorityFilter('low')" data-prio-filter="low" class="px-3 py-1.5 rounded-full text-xs font-semibold bg-surface-container text-on-surface-variant hover:bg-surface-container-high">🟢 Baja</button>
+          </div>
+        </div>
+
+        <!-- Lista de Tareas de Hoy -->
+        <div id="miDiaTaskList" class="space-y-3">
+          <!-- Renderizado dinámico desde app.js -->
+        </div>
+
+      </section>
+
+      <!-- ============================================== -->
+      <!-- VISTA 2: TABLERO DE ESTADOS KANBAN (#tablero)  -->
+      <!-- ============================================== -->
+      <section id="view-tablero" class="hidden space-y-6">
+        
+        <!-- Header del Tablero Kanban -->
+        <div class="bg-surface-container-lowest p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-bold">Flujo de Estados</span>
+              <span class="text-xs text-slate-400">• Drag & Drop habilitado</span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-on-surface">Tablero de Estados de Tareas</h2>
+            <p class="text-xs text-on-surface-variant mt-0.5">Mueve tus asignaciones entre las 3 etapas conforme avanzas en tu semestre.</p>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="openNewTaskModal()" class="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold shadow-sm hover:bg-primary-container flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[18px]">add</span>
+              <span>Añadir Tarea</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tablero Kanban de 3 Columnas Reglamentarias -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+          
+          <!-- COLUMNA 1: PENDIENTES -->
+          <div class="kanban-column bg-slate-50/70 rounded-2xl p-4 border border-slate-200 flex flex-col gap-3 min-h-[500px] transition-all"
+               ondragover="handleDragOver(event)"
+               ondragleave="handleDragLeave(event)"
+               ondrop="handleDrop(event, 'pending')">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                <h3 class="font-bold text-sm text-on-surface">📌 Pendientes</h3>
+              </div>
+              <span id="kanban-count-pending" class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">0</span>
+            </div>
+            <div id="kanban-col-pending" class="space-y-3 flex-1">
+              <!-- Tarjetas renderizadas dinámicamente -->
+            </div>
+          </div>
+
+          <!-- COLUMNA 2: EN PROCESO -->
+          <div class="kanban-column bg-indigo-50/40 rounded-2xl p-4 border border-indigo-100 flex flex-col gap-3 min-h-[500px] transition-all"
+               ondragover="handleDragOver(event)"
+               ondragleave="handleDragLeave(event)"
+               ondrop="handleDrop(event, 'in_progress')">
+            <div class="flex items-center justify-between pb-2 border-b border-indigo-100">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-primary-container animate-pulse"></span>
+                <h3 class="font-bold text-sm text-on-surface">⏳ En Proceso</h3>
+              </div>
+              <span id="kanban-count-in_progress" class="px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 text-xs font-bold">0</span>
+            </div>
+            <div id="kanban-col-in_progress" class="space-y-3 flex-1">
+              <!-- Tarjetas renderizadas dinámicamente -->
+            </div>
+          </div>
+
+          <!-- COLUMNA 3: TERMINADAS -->
+          <div class="kanban-column bg-emerald-50/40 rounded-2xl p-4 border border-emerald-100 flex flex-col gap-3 min-h-[500px] transition-all"
+               ondragover="handleDragOver(event)"
+               ondragleave="handleDragLeave(event)"
+               ondrop="handleDrop(event, 'completed')">
+            <div class="flex items-center justify-between pb-2 border-b border-emerald-100">
+              <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                <h3 class="font-bold text-sm text-on-surface">✅ Terminadas</h3>
+              </div>
+              <span id="kanban-count-completed" class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold">0</span>
+            </div>
+            <div id="kanban-col-completed" class="space-y-3 flex-1">
+              <!-- Tarjetas renderizadas dinámicamente -->
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ============================================== -->
+      <!-- VISTA 3: CALENDARIO & ENTREGAS (#calendario)   -->
+      <!-- ============================================== -->
+      <section id="view-calendario" class="hidden space-y-6">
+        
+        <!-- Header del Calendario -->
+        <div class="bg-surface-container-lowest p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <span class="material-symbols-outlined text-[24px]">calendar_month</span>
+            </div>
+            <div>
+              <h2 id="calendarMonthTitle" class="text-2xl font-extrabold text-on-surface">Octubre 2026</h2>
+              <p class="text-xs text-on-surface-variant">Visualiza y anticipa tus fechas límites de entrega académica.</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <button onclick="openNewTaskModal()" class="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold shadow-sm hover:bg-primary-container flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[18px]">add_alarm</span>
+              <span>Nueva Entrega</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Grid de Calendario y Lista Lateral de Próximas Entregas -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          <!-- Calendario Mensual Interactivo (8 columnas) -->
+          <div class="lg:col-span-8 bg-surface-container-lowest p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <!-- Días de la semana -->
+            <div class="grid grid-cols-7 gap-2 text-center text-xs font-bold text-slate-400 uppercase tracking-wider pb-2 border-b border-slate-100">
+              <div>Lun</div>
+              <div>Mar</div>
+              <div>Mié</div>
+              <div>Jue</div>
+              <div>Vie</div>
+              <div>Sáb</div>
+              <div>Dom</div>
+            </div>
+
+            <!-- Casillas del mes -->
+            <div id="calendarDaysGrid" class="grid grid-cols-7 gap-2">
+              <!-- Generado dinámicamente -->
+            </div>
+          </div>
+
+          <!-- Lista Cronológica de Próximas Entregas (4 columnas) -->
+          <div class="lg:col-span-4 bg-surface-container-lowest p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+              <h3 class="font-extrabold text-sm text-on-surface">Cronograma de Entregas</h3>
+              <span class="text-[11px] font-bold text-primary">Por vencer</span>
+            </div>
+            <div id="calendarUpcomingDeliveries" class="space-y-3">
+              <!-- Renderizado dinámicamente -->
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ============================================== -->
+      <!-- VISTA 4: ANOTAR TAREA & DESGLOSAR (#anotar)    -->
+      <!-- ============================================== -->
+      <section id="view-anotar-tarea" class="hidden space-y-6">
+        <div class="max-w-2xl mx-auto bg-surface-container-lowest p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+          <div class="border-b border-slate-100 pb-4">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="px-2.5 py-0.5 rounded-full bg-primary text-white text-xs font-bold uppercase tracking-wider">Planificación</span>
+              <span class="text-xs text-slate-400">• Método Prisma</span>
+            </div>
+            <h2 class="text-2xl font-extrabold text-on-surface">Anotar Tarea & Planificación</h2>
+            <p class="text-xs text-on-surface-variant mt-1">Registra la entrega y desglósala en micro-pasos para comenzar sin agobio.</p>
+          </div>
+
+          <!-- Formulario de Creación Directo -->
+          <form onsubmit="handleCreateTaskSubmit(event)" class="space-y-5">
+            <div>
+              <label class="block text-xs font-bold text-on-surface mb-1.5 uppercase tracking-wider">Título de la Tarea o Trabajo</label>
+              <input type="text" id="taskTitleInputDirect" required placeholder="Ej. Taller 4: Ecuaciones Diferenciales Ordinarias" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-surface-container-low text-on-surface text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-on-surface mb-1.5 uppercase tracking-wider">Asignatura</label>
+                <select id="taskSubjectInputDirect" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-surface-container-low text-on-surface text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary shadow-sm">
+                  <option value="Cálculo Multivariable">Cálculo Multivariable</option>
+                  <option value="Algoritmos y Datos">Algoritmos y Datos</option>
+                  <option value="Física Mecánica">Física Mecánica</option>
+                  <option value="Arquitectura Software">Arquitectura Software</option>
+                  <option value="Ética y Sociedad">Ética y Sociedad</option>
+                  <option value="General">Otra Asignatura</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-on-surface mb-1.5 uppercase tracking-wider">Fecha Límite</label>
+                <input type="date" id="taskDueDateInputDirect" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-surface-container-low text-on-surface text-xs font-medium focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+              </div>
+            </div>
+
+            <div class="pt-4 flex justify-end">
+              <button type="button" onclick="openNewTaskModal()" class="px-6 py-2.5 bg-primary text-white rounded-xl text-xs font-bold shadow-sm hover:bg-primary-container">
+                Abrir Asistente Completo de Anotación
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- FOOTER INSTITUCIONAL / ROLES DEL EQUIPO (PRD) -->
+    <footer class="bg-surface-container-lowest border-t border-slate-200/80 px-6 py-4 mt-auto">
+      <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-on-surface-variant">
+        <div class="flex items-center gap-2">
+          <span class="font-extrabold text-primary">Prisma</span>
+          <span>— Herramienta de Enfoque y Organización Académica</span>
+        </div>
+        <!-- Roles del PRD -->
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px]">
+          <span><strong class="text-on-surface">Construye:</strong> Karen Sofia Vargas</span>
+          <span><strong class="text-on-surface">Producto:</strong> Julieth Alexandra Ayala</span>
+          <span><strong class="text-on-surface">Pruebas:</strong> Andrea Lizeth Tellez</span>
+          <span><strong class="text-on-surface">Publica:</strong> Isabel Sofia Hernández</span>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL FLOTANTE GLOBAL: NUEVA TAREA             -->
+  <!-- ============================================== -->
+  <div id="taskModal" class="fixed inset-0 bg-on-surface/40 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-surface-container-lowest max-w-xl w-full rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-pop-in">
+      
+      <!-- Encabezado Modal -->
+      <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-primary-fixed/40 to-surface-container-lowest">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-primary-container text-white flex items-center justify-center shadow-sm">
+            <span class="material-symbols-outlined text-[20px]">add_task</span>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-lg text-on-surface">Anotar Nueva Tarea</h3>
+            <p class="text-xs text-on-surface-variant">Organiza tu entrega con prioridad y micro-pasos.</p>
+          </div>
+        </div>
+        <button onclick="closeNewTaskModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </div>
+
+      <!-- Formulario Modal -->
+      <form onsubmit="handleCreateTaskSubmit(event)" class="p-6 space-y-4">
+        
+        <!-- Título -->
+        <div>
+          <label class="block text-xs font-bold text-on-surface mb-1 uppercase tracking-wider">Título de la Tarea / Trabajo *</label>
+          <input type="text" id="taskTitleInput" required placeholder="Ej. Taller 3: Teorema de Green y Stokes" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-surface-container-low text-on-surface text-xs focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+        </div>
+
+        <!-- Asignatura y Tiempo Estimado -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-on-surface mb-1 uppercase tracking-wider">Asignatura</label>
+            <select id="taskSubjectInput" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-surface-container-low text-on-surface text-xs focus:outline-none focus:ring-2 focus:ring-primary shadow-sm">
+              <option value="Cálculo Multivariable">Cálculo Multivariable</option>
+              <option value="Algoritmos y Datos">Algoritmos y Datos</option>
+              <option value="Física Mecánica">Física Mecánica</option>
+              <option value="Arquitectura Software">Arquitectura Software</option>
+              <option value="Ética y Sociedad">Ética y Sociedad</option>
+              <option value="General">Otra Asignatura</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-on-surface mb-1 uppercase tracking-wider">Carga Estimada (min)</label>
+            <input type="number" id="taskEstimatedInput" value="45" min="10" step="5" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-surface-container-low text-on-surface text-xs focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+          </div>
+        </div>
+
+        <!-- Fecha y Hora Límite -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-on-surface mb-1 uppercase tracking-wider">Fecha de Entrega</label>
+            <input type="date" id="taskDueDateInput" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-surface-container-low text-on-surface text-xs focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-on-surface mb-1 uppercase tracking-wider">Hora Límite</label>
+            <input type="time" id="taskDueTimeInput" value="23:59" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-surface-container-low text-on-surface text-xs focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+          </div>
+        </div>
+
+        <!-- Prioridad -->
+        <div>
+          <label class="block text-xs font-bold text-on-surface mb-1.5 uppercase tracking-wider">Nivel de Prioridad</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button type="button" onclick="selectFormPriority('high')" data-form-priority="high" class="py-2 px-3 rounded-xl border border-red-200 bg-red-50 text-red-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
+              <span class="w-2 h-2 rounded-full bg-red-500"></span>
+              <span>Alta / Crítica</span>
+            </button>
+            <button type="button" onclick="selectFormPriority('medium')" data-form-priority="medium" class="py-2 px-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+              <span>Media</span>
+            </button>
+            <button type="button" onclick="selectFormPriority('low')" data-form-priority="low" class="py-2 px-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>Baja</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Desglose Anti-Procrastinación en Micro-Pasos -->
+        <div class="pt-1">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-bold text-on-surface uppercase tracking-wider flex items-center gap-1">
+              <span class="material-symbols-outlined text-[16px] text-primary">checklist</span>
+              <span>Desglose en Micro-Pasos (15-20 min)</span>
+            </label>
+            <button type="button" onclick="addMicroStepRow()" class="text-xs font-bold text-primary hover:underline flex items-center gap-0.5">
+              <span class="material-symbols-outlined text-[14px]">add</span>
+              <span>Añadir paso</span>
+            </button>
+          </div>
+          <div id="microStepsContainer" class="space-y-2 max-h-36 overflow-y-auto pr-1">
+            <!-- Filas dinámicas -->
+          </div>
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+          <button type="button" onclick="closeNewTaskModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100 transition-colors">
+            Cancelar
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:bg-primary-container transition-all flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">save</span>
+            <span>Guardar Tarea</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- NOTIFICACIÓN TOAST GLOBAL -->
+  <div id="appToast" class="fixed bottom-6 right-6 bg-on-surface text-white px-4 py-3 rounded-2xl shadow-xl border border-slate-700/50 hidden items-center gap-2.5 text-xs font-semibold z-50 transition-all duration-300 transform translate-y-0 opacity-0">
+    <span id="appToastIcon" class="material-symbols-outlined text-[18px] text-emerald-400">check_circle</span>
+    <span id="appToastText">Operación exitosa</span>
+  </div>
+
+  <!-- Lógica de la Aplicación -->
+  <script src="js/app.js"></script>
+</body>
+</html>
