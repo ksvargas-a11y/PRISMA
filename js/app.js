@@ -944,6 +944,78 @@ window.selectFormPriority = function (prio) {
   });
 };
 
+let selectedDirectPriority = 'high';
+window.selectDirectPriority = function (prio) {
+  selectedDirectPriority = prio;
+  document.querySelectorAll('[data-direct-priority]').forEach(btn => {
+    const isThis = btn.getAttribute('data-direct-priority') === prio;
+    if (isThis) {
+      btn.classList.add('ring-2', 'ring-primary', 'font-bold');
+    } else {
+      btn.classList.remove('ring-2', 'ring-primary', 'font-bold');
+    }
+  });
+};
+
+window.addDirectMicroStepRow = function () {
+  const container = document.getElementById('directMicroStepsContainer');
+  if (!container) return;
+  const count = container.querySelectorAll('.direct-micro-step-row').length + 1;
+  const div = document.createElement('div');
+  div.className = 'flex items-center gap-2 direct-micro-step-row animate-fade-in';
+  div.innerHTML = `
+    <input type="text" placeholder="Micro-paso ${count}" class="flex-1 text-xs px-3 py-2 rounded-lg bg-surface-container-low border border-slate-200 focus:outline-none focus:ring-1 focus:ring-primary text-on-surface">
+    <button type="button" onclick="this.closest('.direct-micro-step-row').remove()" class="p-1 text-slate-400 hover:text-red-500">
+      <span class="material-symbols-outlined text-[18px]">close</span>
+    </button>
+  `;
+  container.appendChild(div);
+};
+
+window.handleDirectTaskSubmit = function (e) {
+  e.preventDefault();
+  const title = document.getElementById('taskTitleInputDirect').value.trim();
+  const subject = document.getElementById('taskSubjectInputDirect').value;
+  const dueDate = document.getElementById('taskDueDateInputDirect').value;
+  const dueTime = document.getElementById('taskDueTimeInputDirect').value || '23:59';
+
+  if (!title) {
+    showToast('Por favor escribe un título para la tarea', 'warning');
+    return;
+  }
+
+  const microSteps = [];
+  document.querySelectorAll('#directMicroStepsContainer input[type="text"]').forEach(input => {
+    const txt = input.value.trim();
+    if (txt) {
+      microSteps.push({ text: txt, done: false });
+    }
+  });
+
+  const newTask = {
+    id: 'task-' + Date.now(),
+    title,
+    subject,
+    dueDate,
+    dueTime,
+    priority: selectedDirectPriority,
+    status: 'pending',
+    estimatedMinutes: 45,
+    microSteps,
+    createdAt: new Date().toISOString()
+  };
+
+  AppState.tasks.unshift(newTask);
+  saveTasks();
+  
+  // Limpiar formulario directo
+  document.getElementById('taskTitleInputDirect').value = '';
+  
+  navigateTo('mi-dia');
+  playChime('success');
+  showToast('¡Tarea guardada y planificada!');
+};
+
 window.handleCreateTaskSubmit = function (e) {
   e.preventDefault();
   const title = document.getElementById('taskTitleInput').value.trim();
@@ -1196,4 +1268,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Selector de prioridad por defecto en modal
   window.selectFormPriority('high');
+
+  const directDate = document.getElementById('taskDueDateInputDirect');
+  if (directDate) directDate.value = new Date().toISOString().split('T')[0];
 });
