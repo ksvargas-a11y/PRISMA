@@ -126,6 +126,12 @@ const INITIAL_TASKS = [
 // Estado global de la aplicación
 const AppState = {
   tasks: [],
+  user: {
+    name: '',
+    career: '',
+    university: '',
+    isRegistered: false
+  },
   currentView: 'mi-dia',
   filterPriority: 'all',
   filterSubject: 'all',
@@ -141,8 +147,227 @@ const AppState = {
 };
 
 // ==========================================
-// 2. PERSISTENCIA EN LOCALSTORAGE
+// 2. PERSISTENCIA EN LOCALSTORAGE Y PERFIL
 // ==========================================
+
+function getInitials(name) {
+  if (!name) return 'ES';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
+function getFirstName(name) {
+  if (!name) return 'Estudiante';
+  return name.trim().split(/\s+/)[0];
+}
+
+function loadUser() {
+  try {
+    const saved = localStorage.getItem('prisma_user_v1');
+    if (saved) {
+      AppState.user = JSON.parse(saved);
+    } else {
+      AppState.user = {
+        name: '',
+        career: '',
+        university: '',
+        isRegistered: false
+      };
+    }
+  } catch (e) {
+    AppState.user = { name: '', career: '', university: '', isRegistered: false };
+  }
+}
+
+function saveUser() {
+  try {
+    localStorage.setItem('prisma_user_v1', JSON.stringify(AppState.user));
+  } catch (e) {
+    console.error('Error guardando usuario:', e);
+  }
+}
+
+function applyUserProfile() {
+  const user = AppState.user;
+  const isReg = user && user.isRegistered && user.name;
+  const displayName = isReg ? user.name : 'Estudiante';
+  const firstName = isReg ? getFirstName(user.name) : 'Estudiante';
+  const displayCareer = isReg ? (user.career + (user.university ? ' • ' + user.university : '')) : 'Mi Carrera • Racha 5d 🔥';
+  const initials = isReg ? getInitials(user.name) : 'ES';
+
+  // Sidebar
+  const sbInit = document.getElementById('sidebarUserInitials');
+  const sbName = document.getElementById('sidebarUserName');
+  const sbCareer = document.getElementById('sidebarUserCareer');
+  if (sbInit) sbInit.textContent = initials;
+  if (sbName) sbName.textContent = displayName;
+  if (sbCareer) sbCareer.textContent = displayCareer;
+
+  // Header
+  const hdInit = document.getElementById('headerUserInitials');
+  if (hdInit) hdInit.textContent = initials;
+
+  // Mi Día View
+  const mdAvatar = document.getElementById('miDiaUserAvatar');
+  const mdGreeting = document.getElementById('miDiaGreetingName');
+  const mdCareer = document.getElementById('miDiaCareerSubtitle');
+  if (mdAvatar) mdAvatar.textContent = initials;
+  if (mdGreeting) mdGreeting.textContent = `¡Hola, ${firstName}! 👋`;
+  if (mdCareer) mdCareer.textContent = isReg 
+    ? `${user.career} • Semana académica activa • Tienes entregas organizadas listas para desglosar.`
+    : `Semana académica activa • Tienes entregas con prioridad alta listas para desglosar.`;
+
+  // Profile Modal Avatar
+  const pmAvatar = document.getElementById('profileModalAvatar');
+  if (pmAvatar) pmAvatar.textContent = initials;
+
+  // Inputs en modal de perfil
+  const pName = document.getElementById('profileNameInput');
+  const pCareer = document.getElementById('profileCareerInput');
+  const pUni = document.getElementById('profileUniInput');
+  if (pName) pName.value = user.name || '';
+  if (pCareer) pCareer.value = user.career || '';
+  if (pUni) pUni.value = user.university || '';
+}
+
+function checkOnboarding() {
+  const modal = document.getElementById('onboardingModal');
+  if (!modal) return;
+  if (!AppState.user.isRegistered) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  } else {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+}
+
+window.handleOnboardingSubmit = function(e) {
+  e.preventDefault();
+  const name = document.getElementById('onboardNameInput').value.trim();
+  const career = document.getElementById('onboardCareerInput').value.trim();
+  const uni = document.getElementById('onboardUniInput')?.value.trim() || '';
+  const mode = document.querySelector('input[name="onboardMode"]:checked')?.value || 'sample';
+
+  if (!name || !career) {
+    showToast('Por favor completa tu nombre y carrera', 'warning');
+    return;
+  }
+
+  AppState.user = {
+    name,
+    career,
+    university: uni,
+    isRegistered: true
+  };
+  saveUser();
+
+  if (mode === 'clean') {
+    AppState.tasks = [];
+    saveTasks();
+  } else {
+    // Si no habían tareas, cargar tareas de ejemplo
+    if (AppState.tasks.length === 0) {
+      AppState.tasks = [...INITIAL_TASKS];
+      saveTasks();
+    }
+  }
+
+  const modal = document.getElementById('onboardingModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+
+  applyUserProfile();
+  renderActiveView();
+  playChime('success');
+  triggerConfetti();
+  showToast(`¡Bienvenido(a) a Prisma, ${getFirstName(name)}!`);
+};
+
+window.continueAsGuest = function() {
+  AppState.user = {
+    name: 'Estudiante Invitado',
+    career: 'Universidad',
+    university: '',
+    isRegistered: true
+  };
+  saveUser();
+  const modal = document.getElementById('onboardingModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+  applyUserProfile();
+  renderActiveView();
+  showToast('Modo invitado activado');
+};
+
+window.openProfileModal = function() {
+  applyUserProfile();
+  const modal = document.getElementById('profileModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
+};
+
+window.closeProfileModal = function() {
+  const modal = document.getElementById('profileModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+};
+
+window.handleProfileUpdateSubmit = function(e) {
+  e.preventDefault();
+  const name = document.getElementById('profileNameInput').value.trim();
+  const career = document.getElementById('profileCareerInput').value.trim();
+  const uni = document.getElementById('profileUniInput').value.trim();
+
+  AppState.user.name = name;
+  AppState.user.career = career;
+  AppState.user.university = uni;
+  AppState.user.isRegistered = true;
+  saveUser();
+
+  applyUserProfile();
+  closeProfileModal();
+  renderActiveView();
+  showToast('Perfil actualizado con éxito');
+};
+
+window.logoutUser = function() {
+  if (confirm('¿Deseas cerrar sesión para que otra persona pueda ingresar sus datos y registrarse?')) {
+    AppState.user = {
+      name: '',
+      career: '',
+      university: '',
+      isRegistered: false
+    };
+    localStorage.removeItem('prisma_user_v1');
+    closeProfileModal();
+    applyUserProfile();
+    checkOnboarding();
+    showToast('Sesión cerrada. Puedes ingresar un nuevo perfil.');
+  }
+};
+
+window.exportTasksJson = function() {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(AppState.tasks, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", `prisma-tareas-${AppState.user.name ? AppState.user.name.toLowerCase().replace(/\s+/g, '-') : 'estudiante'}.json`);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+  showToast('Archivo JSON de tareas descargado');
+};
 
 function loadTasks() {
   try {
@@ -150,8 +375,13 @@ function loadTasks() {
     if (saved) {
       AppState.tasks = JSON.parse(saved);
     } else {
-      AppState.tasks = [...INITIAL_TASKS];
-      saveTasks();
+      // Si el usuario ya está registrado pero no tiene tareas, no forzar tareas iniciales
+      if (!AppState.user || !AppState.user.isRegistered) {
+        AppState.tasks = [...INITIAL_TASKS];
+        saveTasks();
+      } else {
+        AppState.tasks = [];
+      }
     }
   } catch (err) {
     console.warn('Error leyendo localStorage, usando datos iniciales:', err);
@@ -1253,9 +1483,12 @@ window.resetAllData = function () {
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
+  loadUser();
   loadTasks();
+  applyUserProfile();
   initPomodoro();
   navigateTo('mi-dia');
+  checkOnboarding();
 
   // Enlazar eventos de navegación en sidebar
   document.querySelectorAll('[data-nav-target]').forEach(btn => {

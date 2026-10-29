@@ -139,16 +139,19 @@
     </div>
 
     <!-- Perfil del Estudiante (Footer Sidebar) -->
-    <div class="p-4 border-t border-slate-100 bg-surface-container-low/40">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm ring-2 ring-white shrink-0">
-          KV
+    <div class="p-3 border-t border-slate-100 bg-surface-container-low/40">
+      <button onclick="openProfileModal()" class="w-full flex items-center gap-3 p-1.5 rounded-xl hover:bg-white/80 transition-all text-left group" title="Ver o editar perfil de estudiante">
+        <div id="sidebarUserInitials" class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm ring-2 ring-white shrink-0">
+          ES
         </div>
-        <div class="flex flex-col min-w-0">
-          <span class="text-xs font-bold text-on-surface truncate">Karen Sofia Vargas</span>
-          <span class="text-[10px] text-on-surface-variant truncate">Ingeniería • Racha 5d 🔥</span>
+        <div class="flex flex-col min-w-0 flex-1">
+          <div class="flex items-center justify-between">
+            <span id="sidebarUserName" class="text-xs font-bold text-on-surface truncate group-hover:text-primary transition-colors">Estudiante</span>
+            <span class="material-symbols-outlined text-[16px] text-slate-400 group-hover:text-primary transition-colors">manage_accounts</span>
+          </div>
+          <span id="sidebarUserCareer" class="text-[10px] text-on-surface-variant truncate">Mi Carrera • Racha 5d 🔥</span>
         </div>
-      </div>
+      </button>
     </div>
   </aside>
 
@@ -175,6 +178,13 @@
 
         <button onclick="resetAllData()" class="p-2 rounded-xl bg-surface-container-lowest hover:bg-slate-100 text-slate-500 transition-colors shadow-sm border border-slate-200" title="Restablecer datos de ejemplo">
           <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+        </button>
+
+        <!-- Botón de Perfil en Header -->
+        <button onclick="openProfileModal()" class="flex items-center gap-1.5 p-1 rounded-xl bg-surface-container-lowest hover:bg-surface-container border border-slate-200 shadow-sm transition-all" title="Mi Perfil / Configuración">
+          <div id="headerUserInitials" class="w-7 h-7 rounded-lg bg-primary text-white flex items-center justify-center font-bold text-xs">
+            ES
+          </div>
         </button>
 
         <button onclick="openNewTaskModal()" class="md:hidden p-2 rounded-xl bg-primary text-white shadow-sm flex items-center justify-center">
@@ -214,15 +224,15 @@
         <!-- Saludo y Métricas Resumen -->
         <div class="bg-surface-container-lowest p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div class="flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary to-secondary text-white flex items-center justify-center font-extrabold text-xl shadow-md">
-              KV
+            <div id="miDiaUserAvatar" class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-primary to-secondary text-white flex items-center justify-center font-extrabold text-xl shadow-md">
+              ES
             </div>
             <div>
               <div class="flex items-center gap-2">
-                <h1 class="text-2xl font-extrabold text-on-surface tracking-tight">¡Hola, Karen! 👋</h1>
+                <h1 id="miDiaGreetingName" class="text-2xl font-extrabold text-on-surface tracking-tight">¡Hola, Estudiante! 👋</h1>
                 <span class="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold">Modo Enfoque</span>
               </div>
-              <p class="text-xs text-on-surface-variant mt-0.5">Semana académica activa • Tienes entregas con prioridad alta listas para desglosar.</p>
+              <p id="miDiaCareerSubtitle" class="text-xs text-on-surface-variant mt-0.5">Semana académica activa • Tienes entregas con prioridad alta listas para desglosar.</p>
             </div>
           </div>
 
@@ -684,6 +694,150 @@
           <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:bg-primary-container transition-all flex items-center gap-1.5">
             <span class="material-symbols-outlined text-[16px]">save</span>
             <span>Guardar Tarea</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL DE BIENVENIDA Y REGISTRO (ONBOARDING)    -->
+  <!-- ============================================== -->
+  <div id="onboardingModal" class="fixed inset-0 bg-on-surface/50 backdrop-blur-md z-50 hidden items-center justify-center p-4">
+    <div class="bg-surface-container-lowest max-w-lg w-full rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-pop-in">
+      
+      <!-- Encabezado con degradado y logo de Prisma -->
+      <div class="p-8 pb-6 bg-gradient-to-br from-primary-fixed via-secondary-fixed/40 to-surface-container-lowest border-b border-slate-100 flex flex-col items-center text-center relative overflow-hidden">
+        <div class="w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg mb-3">
+          <span class="material-symbols-outlined text-[30px]">filter_vintage</span>
+        </div>
+        <span class="px-3 py-1 rounded-full bg-primary text-white text-[11px] font-bold uppercase tracking-wider mb-2">Prisma Academic Focus</span>
+        <h2 class="text-2xl font-extrabold text-on-surface tracking-tight">¡Te damos la bienvenida! 🎓</h2>
+        <p class="text-xs text-on-surface-variant max-w-sm mt-1">
+          Tu espacio personal para organizar asignaturas, desglosar entregas complejas y vencer la procrastinación.
+        </p>
+      </div>
+
+      <!-- Formulario de Registro Rápido -->
+      <form onsubmit="handleOnboardingSubmit(event)" class="p-6 md:p-8 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-on-surface mb-1 uppercase tracking-wider">Tu Nombre Completo *</label>
+          <input type="text" id="onboardNameInput" required placeholder="Ej. Carlos Gómez" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-surface-container-low text-on-surface text-xs focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-on-surface mb-1 uppercase tracking-wider">Carrera / Programa *</label>
+            <input type="text" id="onboardCareerInput" required placeholder="Ej. Ingeniería de Sistemas" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-surface-container-low text-on-surface text-xs focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-on-surface mb-1 uppercase tracking-wider">Universidad (Opcional)</label>
+            <input type="text" id="onboardUniInput" placeholder="Ej. Univ. de Boyacá" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-surface-container-low text-on-surface text-xs focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+          </div>
+        </div>
+
+        <!-- Opción de datos iniciales -->
+        <div class="pt-2">
+          <label class="block text-xs font-bold text-on-surface mb-2 uppercase tracking-wider">¿Cómo deseas comenzar?</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <label class="flex items-start gap-2.5 p-3 rounded-xl border border-primary/40 bg-primary/5 cursor-pointer hover:border-primary transition-all">
+              <input type="radio" name="onboardMode" value="sample" checked class="mt-0.5 text-primary focus:ring-primary">
+              <div class="text-left">
+                <span class="block text-xs font-bold text-primary">Con tareas de ejemplo</span>
+                <span class="block text-[10px] text-slate-500 leading-tight">Recomendado para explorar y probar todas las funciones.</span>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 bg-surface-container-low cursor-pointer hover:border-slate-300 transition-all">
+              <input type="radio" name="onboardMode" value="clean" class="mt-0.5 text-primary focus:ring-primary">
+              <div class="text-left">
+                <span class="block text-xs font-bold text-on-surface">Espacio en blanco</span>
+                <span class="block text-[10px] text-slate-500 leading-tight">Lienzo vacío para empezar a anotar tus tareas desde cero.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Botón de Envío -->
+        <div class="pt-4 flex flex-col items-center gap-2">
+          <button type="submit" class="w-full py-3 px-6 rounded-xl text-xs font-extrabold bg-primary text-white shadow-md hover:bg-primary-container transition-all flex items-center justify-center gap-2">
+            <span>Crear mi Espacio de Estudio</span>
+            <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </button>
+          <button type="button" onclick="continueAsGuest()" class="text-[11px] text-slate-400 hover:text-primary transition-colors">
+            O entrar como invitado de prueba
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL DE PERFIL Y CONFIGURACIÓN               -->
+  <!-- ============================================== -->
+  <div id="profileModal" class="fixed inset-0 bg-on-surface/40 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+    <div class="bg-surface-container-lowest max-w-md w-full rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-pop-in">
+      
+      <!-- Encabezado Modal -->
+      <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-surface-container-low">
+        <div class="flex items-center gap-3">
+          <div id="profileModalAvatar" class="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-sm shadow-sm">
+            ES
+          </div>
+          <div>
+            <h3 class="font-extrabold text-base text-on-surface">Perfil del Estudiante</h3>
+            <p class="text-xs text-on-surface-variant">Configuración de tu cuenta personal</p>
+          </div>
+        </div>
+        <button onclick="closeProfileModal()" class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200/50 transition-colors">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </div>
+
+      <!-- Formulario de Edición -->
+      <form onsubmit="handleProfileUpdateSubmit(event)" class="p-6 space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-on-surface mb-1 uppercase tracking-wider">Nombre Completo</label>
+          <input type="text" id="profileNameInput" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-surface-container-low text-on-surface text-xs focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-on-surface mb-1 uppercase tracking-wider">Carrera / Programa</label>
+          <input type="text" id="profileCareerInput" required class="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-surface-container-low text-on-surface text-xs focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-on-surface mb-1 uppercase tracking-wider">Universidad</label>
+          <input type="text" id="profileUniInput" class="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-surface-container-low text-on-surface text-xs focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" />
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2 border-b border-slate-100 pb-4">
+          <button type="submit" class="px-5 py-2 rounded-xl text-xs font-bold bg-primary text-white shadow-sm hover:bg-primary-container transition-all flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">check</span>
+            <span>Guardar Perfil</span>
+          </button>
+        </div>
+
+        <!-- Acciones Avanzadas de Cuenta -->
+        <div class="pt-2 space-y-2">
+          <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Acciones de Datos y Cuenta</div>
+          
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" onclick="exportTasksJson()" class="p-2 text-left rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-medium text-slate-600 flex items-center gap-1.5 transition-colors">
+              <span class="material-symbols-outlined text-[16px] text-primary">download</span>
+              <span>Descargar Mis Tareas</span>
+            </button>
+            <button type="button" onclick="resetAllData()" class="p-2 text-left rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-medium text-slate-600 flex items-center gap-1.5 transition-colors">
+              <span class="material-symbols-outlined text-[16px] text-amber-500">restart_alt</span>
+              <span>Cargar Ejemplos</span>
+            </button>
+          </div>
+
+          <button type="button" onclick="logoutUser()" class="w-full p-2.5 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors mt-2">
+            <span class="material-symbols-outlined text-[16px]">logout</span>
+            <span>Cerrar Sesión / Registrar Otro Estudiante</span>
           </button>
         </div>
 
